@@ -1,0 +1,18 @@
+{
+  "name": "trello-training-app",
+  "version": "1.0.0",
+  "description": "junior development training app using trello api",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Harun Davood",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.15.1",
+    "express": "^4.13.4",
+    "jQuery": "^1.7.4",
+    "prompt": "^1.0.0",
+    "trello": "^0.5.1"
+  }
+}
