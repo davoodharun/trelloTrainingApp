@@ -10,9 +10,12 @@
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.15.1",
+    "cliff": "^0.1.10",
     "express": "^4.13.4",
     "jQuery": "^1.7.4",
+    "node-trello": "^1.1.2",
     "prompt": "^1.0.0",
+    "request": "^2.72.0",
     "trello": "^0.5.1"
   }
 }
