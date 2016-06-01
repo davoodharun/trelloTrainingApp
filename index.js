@@ -13,36 +13,67 @@ var prompt = require('prompt'),
 
 prompt.start();
 prompt.get(['username'], function(err, result) {
-	var dashBoard = new Dashboard(result.username + 's Dashboard' )
+	var dashBoard = new Dashboard(result.username + 's Dashboard');
+	getBoardsForUser(result.username).then(function(result) {
+		result.forEach(function(element) {
+			var board = new Board(element.name, element.id);
+			getListsForBoard(element.id).then(function(result) {
+				result.forEach(function(element) {
+					var list = new List(element.name, element.id);
+					getTasksForList(element.id).then(function(result) {
+						result.forEach(function(element) {
+							var task = new Task(element.name, element.id);
+							list.tasks.push(task);
+							board.lists.push(list);
+							dashBoard.boards.push(board);
+							console.log(dashBoard)
+						})
+					})
+				})
+			})
+		})
+	}).catch(function(err) {
+		console.log(err);
+	})
 });
 
 var getBoardsForUser = function(username) {
-	trello.get('/1/members' + username + '?boards=all&board_fields=name', function(err, data) {
-		if(err) {
-			return err;
-		} else {
-			return data;
-		}
+	return new Promise(function(fulfill, reject) {
+		trello.get('/1/members/' + username + '?boards=all&board_fields=name', function(err, data) {
+			if(err) {
+				return reject(err);
+			} else {
+				return fulfill(data.boards.filter(function(element) {
+					return element.name.includes('(development)');
+				}));
+			}
+		});
 	})
 };
 
 var getListsForBoard = function(board_id) {
-	trello.get('/1/boards/' + board_id + 'lists=open&list_fields=name', function(err, data) {
-		if(err) {
-			return err;
-		} else {
-			return data;
-		}
+	return new Promise(function(fulfill, reject) {
+		trello.get('/1/boards/' + board_id + '?lists=open&list_fields=name', function(err, data) {
+			if(err) {
+				return reject(err);
+			} else {
+				return fulfill(data.lists);
+			}
+		});
 	})
 };
 
 var getTasksForList = function(list_id) {
-	trello.get('/1/lists/' + list_id + 'cards=open&card_fields=name', function(err, data) {
-		if(err) {
-			return err;
-		} else {
-			return data;
-		}
+	console.log(list_id)
+	return new Promise(function(fulfill, reject) {
+		trello.get('/1/lists/' + list_id + '?cards=open&card_fields=name', function(err, data) {
+			if(err) {
+				console.log('error getting cards')
+				return reject(err);
+			} else {
+				return fulfill(data.cards);
+			}
+		});
 	})
 };
 
