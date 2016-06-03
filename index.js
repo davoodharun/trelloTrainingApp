@@ -100,7 +100,7 @@ var displayBoard = function(dashBoard, board_id) {
 				var action = element.actions.filter(function (element) {
 					return element.type = 'updateCheckItemStateOnCard';
 				});
-				dateCompleted = action[0].date;
+				dateCompleted = new Date(action[0].date).toLocaleString()
 			} else {
 				completed = '✖';
 				dateCompleted = '';
@@ -111,13 +111,13 @@ var displayBoard = function(dashBoard, board_id) {
 			})
 			if(labels.indexOf('Required') >= 0) {
 				labels.splice(labels.indexOf('Required'), 1)
-				console.log('  ' + completed + '  ' + colors.green(element.name) + ' | ' + new Date(dateCompleted).toLocaleString());
+				console.log('  ' + completed + '  ' + colors.green(element.name) + ' | ' + colors.green(dateCompleted));
 			} 
 			else if (labels.indexOf('Recommended') >=0) {
 				labels.splice(labels.indexOf('Recommended'), 1)
-				console.log('  ' + completed + '  ' + colors.yellow(element.name) + ' | ' + new Date(dateCompleted).toLocaleString());
+				console.log('  ' + completed + '  ' + colors.yellow(element.name) + ' | ' + colors.green(dateCompleted));
 			} else {
-				console.log('  ' + completed + '  ' + colors.magenta(element.name) + ' | ' + new Date(dateCompleted).toLocaleString());
+				console.log('  ' + completed + '  ' + colors.magenta(element.name) + ' | ' + colors.green(dateCompleted));
 			}
 		})
 		console.log('\n')
