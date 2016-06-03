@@ -11,7 +11,7 @@ This application is meant to analyze a trello user's boards on their account. Th
 3. Run npm install in your console within the root directory of the cloned repo
 4. Log into Trello in your browser and navigate to https://trello.com/app-key
 5. Insert key into API_KEY.js
-6. Navigate to https://trello.com/1/connect?key=<PUBLIC_KEY>&name=MyApp&response_type=token&expiration=never after replacing <PUBLIC_KEY> with the key obtained in step 4.
+6. Navigate to https://trello.com/1/connect?key=PUBLIC_KEY&name=MyApp&response_type=token&expiration=never after replacing PUBLIC_KEY with the key obtained in step 4.
 7. Insert token obtained in step 6 into API_KEY.js
 8. Run node index.js inside root directory of this repo
 9. When prompted, enter your trello username in your console

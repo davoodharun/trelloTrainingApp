@@ -1,4 +1,4 @@
-var apiKey = require('./apiKey') || require('./API_KEY'),
+var apiKey = require('./API_KEY'),
 		Trello = require("node-trello"),
 		trello = new Trello(apiKey.trelloClientKey, apiKey.token)
 
