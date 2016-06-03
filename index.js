@@ -5,9 +5,12 @@ var prompt = require('prompt'),
 		colors = require('colors/safe'),
 		Dashboard = require('./dashBoard'),
 		trelloController = require('./trelloController'),
-		spinner = new Spinner('creating your dashboard.. %s'),
-		promptConstants = require('./promptConstants')
+		fs = require('fs'),
+		promptConstants = require('./promptConstants');
+		
 
+		
+var spinner = new Spinner('creating your dashboard.. %s');
 spinner.setSpinnerString('|/-\\');
 console.log(promptConstants.welcome);
 prompt.start();
@@ -41,10 +44,10 @@ prompt.get(['username', 'tag'], function(err, result) {
 							spinner.stop(true);
 							displayBoardList(dashBoard);
 						}
-					})
+					});
 				}
-			})
-		})
+			});
+		});
 	}
 });
 
@@ -56,7 +59,7 @@ var displayBoardList = function(dashBoard) {
 	dashBoard.boards.forEach(function(element, index){
 		var rows = [];
 		console.log(promptConstants.board_list(element, index));
-	})
+	});
 	console.log('\n'+ colors.yellow('enter the number of the board you want to view:'))
 	prompt.get(['board_id'], function(err, result) {
 		if(err) {
@@ -64,12 +67,12 @@ var displayBoardList = function(dashBoard) {
 		} else {
 			getActionsForTasks(dashBoard, result.board_id)
 		}
-	})
+	});
 }
 
 var getActionsForTasks = function (dashBoard, board_id) {
-	async.each(dashBoard.boards[board_id].lists, function(element, callback){
-		async.map(element.tasks, trelloController.getActionsForTask, function(error, result) {
+	async.each(dashBoard.boards[board_id].lists, function (element, callback){
+		async.map(element.tasks, trelloController.getActionsForTask, function (error, result) {
 			if(error) {
 				return callback(error, null);
 			} else {
@@ -77,20 +80,23 @@ var getActionsForTasks = function (dashBoard, board_id) {
 				// console.log(element.tasks)
 				return callback(null, element);
 			}
-		})
+		});
 	}, function (error) {
 		if(error) {
 			console.log(error);
 		} else {
-			displayBoard(dashBoard, board_id);
+			displayBoard(dashBoard, board_id); // dashBoard is in its final state
+			var date = Date.now().toString();
+			fs.writeFile('reports/' + date +'.txt', JSON.stringify(dashBoard), function (err) {
+			  if (err) return console.log(err);
+			});
 		}
-	})
-	// console.log(dashBoard.baords[board_id].lists[0].tasks)
+	});
 }
 var displayBoard = function(dashBoard, board_id) {
 	console.log(promptConstants.board_name(dashBoard, board_id));
 	console.log('key: ' + colors.green('required'), colors.yellow('recommended'), colors.magenta('unassigned'), colors.white('certifications') + '\n')
-	dashBoard.boards[board_id].lists.forEach(function(element, index){
+	dashBoard.boards[board_id].lists.forEach(function (element, index){
 		console.log(index + ') ' + colors.green(element.name.toUpperCase() + ' ----------'))
 		var completed = '';
 		var dateCompleted = '';
@@ -100,13 +106,13 @@ var displayBoard = function(dashBoard, board_id) {
 				var action = element.actions.filter(function (element) {
 					return element.type = 'updateCheckItemStateOnCard';
 				});
-				dateCompleted = new Date(action[0].date).toLocaleString()
+				dateCompleted = new Date(action[0].date).toLocaleString() // need to fix for IE8
 			} else {
 				completed = '✖';
 				dateCompleted = '';
 			}
 			var labels = [];
-			element.labels.forEach(function(element){
+			element.labels.forEach(function (element){
 				labels.push(element.name)
 			})
 			if(labels.indexOf('Required') >= 0) {
@@ -120,11 +126,11 @@ var displayBoard = function(dashBoard, board_id) {
 				console.log('  ' + completed + '  ' + colors.magenta(element.name) + ' | ' + colors.green(dateCompleted));
 			}
 		})
-		console.log('\n')
+		console.log('\n');
 	})
 
 	console.log('press y to go back to board list...')
-	prompt.get(['continue'], function(err, result) {
+	prompt.get(['continue'], function (err, result) {
 		if(err) {
 			console.log(error)
 		} else {
