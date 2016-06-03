@@ -30,7 +30,7 @@ module.exports = {
 	},
 
 	getTasksForList: function (list, callback) {
-		trello.get('/1/lists/' + list.id + '?cards=open&card_fields=all', function(err, data) {
+		trello.get('/1/lists/' + list.id + '?cards=open&card_fields=name,badges,labels', function(err, data) {
 			if(err) {
 				return callback (err, null);
 			} else {
@@ -41,11 +41,18 @@ module.exports = {
 	},
 
 	getActionsForTask: function (task, callback) {
-		trello.get('/1/cards/' + task.id + '?actions=all', function(err, data) {
+		trello.get('/1/cards/' + task.id + '?actions=updateCheckItemStateOnCard', function(err, data) {
 			if(err) {
 				return callback (err, null);
 			} else {
-				task.actions = data.actions;
+				if(!data.actions.length) {
+					task.actions = [];
+				} else {
+					task.actions = [data.actions[0]];
+				}
+			
+				// task.actions = data.actions;
+				// console.log(task.actions)
 				return callback (null, task);
 			}
 		});

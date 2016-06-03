@@ -5,10 +5,8 @@ var prompt = require('prompt'),
 		colors = require('colors/safe'),
 		Dashboard = require('./dashBoard'),
 		trelloController = require('./trelloController'),
-		fs = require('fs'),
+		writeFile = require('./writeFileController'),
 		promptConstants = require('./promptConstants');
-		
-
 		
 var spinner = new Spinner('creating your dashboard.. %s');
 spinner.setSpinnerString('|/-\\');
@@ -86,13 +84,11 @@ var getActionsForTasks = function (dashBoard, board_id) {
 			console.log(error);
 		} else {
 			displayBoard(dashBoard, board_id); // dashBoard is in its final state
-			var date = Date.now().toString();
-			fs.writeFile('reports/' + date +'.txt', JSON.stringify(dashBoard), function (err) {
-			  if (err) return console.log(err);
-			});
+			writeFile(dashBoard, board_id);
 		}
 	});
 }
+
 var displayBoard = function(dashBoard, board_id) {
 	console.log(promptConstants.board_name(dashBoard, board_id));
 	console.log('key: ' + colors.green('required'), colors.yellow('recommended'), colors.magenta('unassigned'), colors.white('certifications') + '\n')
@@ -129,13 +125,14 @@ var displayBoard = function(dashBoard, board_id) {
 		console.log('\n');
 	})
 
+	console.log('exported .csv file to reports folder')
 	console.log('press y to go back to board list...')
 	prompt.get(['continue'], function (err, result) {
 		if(err) {
 			console.log(error)
 		} else {
 			if(result.continue === 'y') {
-				display(dashBoard)
+				displayBoardList(dashBoard)
 			}
 			
 		}
