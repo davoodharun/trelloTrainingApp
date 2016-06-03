@@ -11,6 +11,6 @@ module.exports = {
 		return '  ' + index + ') ' + board.name + ' | ' + colors.cyan(board.lists.length + ' lists');
 	},
 	board_name: function(dashBoard, board_id) {
-		return '\n' + colors.red('Board:', dashBoard.boards[board_id].name);
+		return '\n' + colors.red('Board:', dashBoard.boards[board_id].name + '\n');
 	}
 }

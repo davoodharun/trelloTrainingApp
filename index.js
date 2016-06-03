@@ -35,13 +35,13 @@ prompt.get(['username', 'tag'], function(err, result) {
 							}
 						});
 					}, function (error) {
-							if(error) {
-								console.log(error)
-							} else {
-								spinner.stop(true);
-								display(dashBoard);
-							}
-						})
+						if(error) {
+							console.log(error)
+						} else {
+							spinner.stop(true);
+							displayBoardList(dashBoard);
+						}
+					})
 				}
 			})
 		})
@@ -50,7 +50,7 @@ prompt.get(['username', 'tag'], function(err, result) {
 
 
 
-var display = function(dashBoard) {
+var displayBoardList = function(dashBoard) {
 	console.log(promptConstants.dashboard_header(dashBoard)) 
 	console.log(promptConstants.boards_header)
 	dashBoard.boards.forEach(function(element, index){
@@ -62,21 +62,48 @@ var display = function(dashBoard) {
 		if(err) {
 			console.log(error)
 		} else {
-			displayBoard(dashBoard, result.board_id)
+			getActionsForTasks(dashBoard, result.board_id)
 		}
 	})
 }
 
+var getActionsForTasks = function (dashBoard, board_id) {
+	async.each(dashBoard.boards[board_id].lists, function(element, callback){
+		async.map(element.tasks, trelloController.getActionsForTask, function(error, result) {
+			if(error) {
+				return callback(error, null);
+			} else {
+				element.tasks = result;
+				// console.log(element.tasks)
+				return callback(null, element);
+			}
+		})
+	}, function (error) {
+		if(error) {
+			console.log(error);
+		} else {
+			displayBoard(dashBoard, board_id);
+		}
+	})
+	// console.log(dashBoard.baords[board_id].lists[0].tasks)
+}
 var displayBoard = function(dashBoard, board_id) {
 	console.log(promptConstants.board_name(dashBoard, board_id));
-	dashBoard.boards[board_id].lists.forEach(function(element){
-		console.log(element.name)
+	console.log('key: ' + colors.green('required'), colors.yellow('recommended'), colors.magenta('unassigned'), colors.white('certifications') + '\n')
+	dashBoard.boards[board_id].lists.forEach(function(element, index){
+		console.log(index + ') ' + colors.green(element.name.toUpperCase() + ' ----------'))
 		var completed = '';
+		var dateCompleted = '';
 		element.tasks.forEach(function(element){
 			if(element.badges.checkItemsChecked === 1) {
 				completed = '✔';
+				var action = element.actions.filter(function (element) {
+					return element.type = 'updateCheckItemStateOnCard';
+				});
+				dateCompleted = action[0].date;
 			} else {
 				completed = '✖';
+				dateCompleted = '';
 			}
 			var labels = [];
 			element.labels.forEach(function(element){
@@ -84,15 +111,28 @@ var displayBoard = function(dashBoard, board_id) {
 			})
 			if(labels.indexOf('Required') >= 0) {
 				labels.splice(labels.indexOf('Required'), 1)
-				console.log(completed + '  ' + colors.green(element.name) + ' | ' + colors.white(labels.join(' , ')));
+				console.log('  ' + completed + '  ' + colors.green(element.name) + ' | ' + new Date(dateCompleted).toLocaleString());
 			} 
 			else if (labels.indexOf('Recommended') >=0) {
 				labels.splice(labels.indexOf('Recommended'), 1)
-				console.log(completed + '  ' + colors.yellow(element.name) + ' | ' + colors.white(labels.join(' , ')));
+				console.log('  ' + completed + '  ' + colors.yellow(element.name) + ' | ' + new Date(dateCompleted).toLocaleString());
 			} else {
-				console.log(completed + '  ' + colors.magenta(element.name) + ' | ' + colors.white(labels.join(' , ')));
+				console.log('  ' + completed + '  ' + colors.magenta(element.name) + ' | ' + new Date(dateCompleted).toLocaleString());
 			}
 		})
+		console.log('\n')
+	})
+
+	console.log('press y to go back to board list...')
+	prompt.get(['continue'], function(err, result) {
+		if(err) {
+			console.log(error)
+		} else {
+			if(result.continue === 'y') {
+				display(dashBoard)
+			}
+			
+		}
 	})
 }
 
