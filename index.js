@@ -8,6 +8,36 @@ var prompt = require('prompt'),
 		writeFile = require('./writeFileController'),
 		promptConstants = require('./promptConstants');
 
+/* ::: CONTROL LOGIC :::
+*	 1). Welcome displayed
+*	 2). User is prompted for username and tag to search boards on trello account
+*  3). User enters username and tag
+*  4). After input, new dashBoard is created with username and tag
+*  5). Script calls trello api to get all boards for username with given tag name
+*  6). Result of 6 is an array of boards that is assigned to dashBoard.boards
+*  7). For each board in dashBoard.boards, script calls trello api to get a board's list
+*  8). Result of 7 is assigned to dashBoard.boards[board_id].lists for a given board_id
+*  9). For each list in 8 script calls trello api to get a list's tasks.
+* 10). Result of 9 is assigned to dashBoard.boards[board_id][list_id].tasks for a given board_id and list_id.
+* 11). User is displayed all board names with an index in addition to the respective amount of lists for each board
+* 12). User is prompted to input a board_id to view a specific board
+* 13). After input, script calls trello api for all the tasks for the board specfied in 12
+* 14). Result of 13 is assigned to dashBoard[board_id][list_id][task_id].actions for a given board_id, list_id, and task_id
+* 15). Report is generated in folder reports/[time_stamp]/[board_name].csv for board selected in 12 with all lists and tasks and date of completed tasks
+* 16). User prompt appears to continue application
+*	17). If user enters y, application will go to state 11 -- report will be generated in same folder as 15 with a different board_name
+*/
+
+/* ::: FUNCTION CALLS :::
+* start <-----------------------------------------------
+* 	--> createDashBoard (username, tag)                |
+*			--> displayBoardList (dashBoard)                 | 
+*				--> getActionsForTasks (dashBoard, board_id)   |
+*					--> displayBoard (dashBoard, board_id) ------
+* 				--> writeFile (dashBoard, board_id)    
+
+*/
+
 
 /*----------  start script  ----------*/
 // Loading spinner
@@ -27,6 +57,15 @@ prompt.get(['username', 'tag'], function(err, result) {
 	} 
 	// start loading spinner
 	spinner.start();
+	createDashBoard(result.username, result.tag);
+});
+
+/*=================================================
+=            dashBoard build functions            =
+=================================================*/
+
+/*----------  function to get actions (dates of completed tasks) for a specific board from user input  ----------*/
+var createDashBoard = function(username, tag) {
 	// create new Dashboard with input username and input tag name
 	var dashBoard = new Dashboard(result.username, result.tag);
 	// trello api call
@@ -64,12 +103,7 @@ prompt.get(['username', 'tag'], function(err, result) {
 			});
 		});
 	});
-});
-
-/*=================================================
-=            dashBoard build functions            =
-=================================================*/
-/*----------  function to get actions (dates of completed tasks) for a specific board from user input  ----------*/
+}
 
 var getActionsForTasks = function (dashBoard, board_id) {
 	async.each(dashBoard.boards[board_id].lists, function (element, callback){
@@ -93,8 +127,6 @@ var getActionsForTasks = function (dashBoard, board_id) {
 }
 
 /*=====  End of dashBoard build functions  ======*/
-
-
 
 
 /*=========================================
@@ -130,6 +162,7 @@ var displayBoardList = function(dashBoard) {
 
 
 /*----------  prompt display function to display lists and tasks of a specific board  ----------*/
+
 // takes a dashBoard object and a board number (index of dashBoard.boards)
 var displayBoard = function(dashBoard, board_id) {
 	// console board header
