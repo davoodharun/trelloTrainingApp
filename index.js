@@ -29,13 +29,12 @@ var prompt = require('prompt'),
 */
 
 /* ::: FUNCTION CALLS :::
-* start <-----------------------------------------------
-* 	--> createDashBoard (username, tag)                |
-*			--> displayBoardList (dashBoard)                 | 
-*				--> getActionsForTasks (dashBoard, board_id)   |
-*					--> displayBoard (dashBoard, board_id) ------
-* 				--> writeFile (dashBoard, board_id)    
-
+* start --> createDashBoard (username, tag)                | 
+*   			--> displayBoardList (dashBoard) <---------------| 
+*						--> getActionsForTasks (dashBoard, board_id)   |
+*							--> displayBoard (dashBoard, board_id) ------------ end ---> 
+* 						--> writeFile (dashBoard, board_id)    
+*
 */
 
 
@@ -43,33 +42,44 @@ var prompt = require('prompt'),
 // Loading spinner
 var spinner = new Spinner('creating your dashboard.. %s');
 spinner.setSpinnerString('|/-\\');
-
 // welcome prompt
 console.log(promptConstants.welcome);
 prompt.start();
 
-// ask user for username and tag input
-console.log(promptConstants.username_tag_prompt);
-prompt.get(['username', 'tag'], function(err, result) {
-	if(err) {
-		console.log(err);
-		return;
-	} 
-	// start loading spinner
-	spinner.start();
-	createDashBoard(result.username, result.tag);
-});
+
+var start = function () {
+	// ask user for username and tag input
+	console.log(promptConstants.username_tag_prompt);
+	prompt.get(['username', 'tag'], function(err, result) {
+		if(err) {
+			console.log(err);
+			return;
+		} 
+		// start loading spinner
+		if(result.username && result.tag) {
+			spinner.start();
+			createDashBoard(result.username, result.tag);
+		} else {
+			console.log(':( sorry try again --- you must enter a username and tag name');
+			start();
+		}
+	});
+}
+
+// init 
+start();
 
 /*=================================================
 =            dashBoard build functions            =
 =================================================*/
 
-/*----------  function to get actions (dates of completed tasks) for a specific board from user input  ----------*/
+/*----------  function that creates dashBoard and finds all boards (with tag), lists, and tasks  ----------*/
+
 var createDashBoard = function(username, tag) {
 	// create new Dashboard with input username and input tag name
-	var dashBoard = new Dashboard(result.username, result.tag);
+	var dashBoard = new Dashboard(username, tag);
 	// trello api call
-	trelloController.getBoardsForUser(result.username, result.tag).then(function(result) {
+	trelloController.getBoardsForUser(username, tag).then(function(result) {
 		// set boards property on dashBoard to be equal to the result of api call (array of boards)
 		dashBoard.boards = result;
 		// get lists for each board in dashBoard.boards
@@ -102,10 +112,18 @@ var createDashBoard = function(username, tag) {
 				displayBoardList(dashBoard); // dashBoard WITHOUT actions for each task
 			});
 		});
+	}).catch(function(error) {
+		console.log(error);
+		spinner.stop(true);
+		console.log('error occured. please check your api key and token and try again')
+		process.env.exit(-1);
 	});
 }
 
+/*----------  function to get actions (dates of completed tasks) for a specific board from user input  ----------*/
 var getActionsForTasks = function (dashBoard, board_id) {
+	spinner = new Spinner('exporting your report.. %s');
+	spinner.start();
 	async.each(dashBoard.boards[board_id].lists, function (element, callback){
 		async.map(element.tasks, trelloController.getActionsForTask, function (error, result) {
 			if(error) {
@@ -120,6 +138,7 @@ var getActionsForTasks = function (dashBoard, board_id) {
 		if(error) {
 			console.log(error);
 		} else {
+			spinner.stop(true);
 			displayBoard(dashBoard, board_id); // dashBoard is in its final state
 			writeFile(dashBoard, board_id);
 		}
@@ -149,7 +168,7 @@ var displayBoardList = function(dashBoard) {
 		console.log(promptConstants.board_list(element, index));
 	});
 	// user input for board choice
-	console.log('\n'+ colors.yellow('enter the number of the board you want to view:'))
+	console.log(promptConstants.board_choice)
 	prompt.get(['board_id'], function (err, result) {
 		if (err) {
 			console.log(error);
@@ -221,25 +240,24 @@ var displayBoard = function(dashBoard, board_id) {
 		console.log('\n');
 	});
 
-	console.log('exported .csv file to reports folder')
-	console.log('press y to go back to board list...')
+	console.log('exported .csv file to reports folder');
+	console.log(colors.cyan('press y to go back to board list...'));
 
 	// recursive input to continue or exit
 	prompt.get(['continue'], function (err, result) {
 		if(err) {
-			console.log(error)
+			console.log(err);
 		} else {
 			if(result.continue === 'y') {
 				displayBoardList(dashBoard);
+			} else {
+				process.exit(-1);
 			}
 		}
 	})
-}
-
-
+};
 /*=====  End of Display Functions  ======*/
 
-/*----------  Board list display function  ----------*/
 
 
 

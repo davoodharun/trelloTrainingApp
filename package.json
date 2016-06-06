@@ -12,7 +12,6 @@
     "async": "^2.0.0-rc.5",
     "body-parser": "^1.15.1",
     "cli-spinner": "^0.2.5",
-    "cliff": "^0.1.10",
     "colors": "^1.1.2",
     "express": "^4.13.4",
     "jQuery": "^1.7.4",
@@ -22,6 +21,7 @@
     "node-trello": "^1.1.2",
     "prompt": "^1.0.0",
     "request": "^2.72.0",
-    "trello": "^0.5.1"
+    "trello": "^0.5.1",
+    "vows": "^0.8.1"
   }
 }
