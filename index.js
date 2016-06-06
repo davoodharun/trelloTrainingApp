@@ -43,11 +43,12 @@ var prompt = require('prompt'),
 var spinner = new Spinner('creating your dashboard.. %s');
 spinner.setSpinnerString('|/-\\');
 // welcome prompt
-console.log(promptConstants.welcome);
-prompt.start();
+
 
 
 var start = function () {
+	console.log(promptConstants.welcome);
+	prompt.start();
 	// ask user for username and tag input
 	console.log(promptConstants.username_tag_prompt);
 	prompt.get(['username', 'tag'], function(err, result) {
@@ -65,7 +66,6 @@ var start = function () {
 		}
 	});
 }
-
 // init 
 start();
 
@@ -76,6 +76,8 @@ start();
 /*----------  function that creates dashBoard and finds all boards (with tag), lists, and tasks  ----------*/
 
 var createDashBoard = function(username, tag) {
+
+	return new Promise (function (fulfill, reject) {})
 	// create new Dashboard with input username and input tag name
 	var dashBoard = new Dashboard(username, tag);
 	// trello api call
@@ -88,6 +90,8 @@ var createDashBoard = function(username, tag) {
 				console.log(error);
 				return;
 			}
+			// result is a newly mapped array of boards that each have .lists as an array of lists
+			dashBoard.boards = result;
 			// iterate over each board
 			async.each(dashBoard.boards, function(element, callback){
 				// get tasks (or cards) for each list in dashBoard.board[element];
@@ -258,7 +262,13 @@ var displayBoard = function(dashBoard, board_id) {
 };
 /*=====  End of Display Functions  ======*/
 
-
+module.exports = {
+	start: start,
+	getActionsForTasks: getActionsForTasks,
+	displayBoard: displayBoard,
+	displayBoardList: displayBoardList,
+	createDashBoard: createDashBoard
+}
 
 
 
