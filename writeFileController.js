@@ -6,7 +6,7 @@ var fs = require('fs'),
 		date = require('./dateCreator');
 
 
-module.exports = function(dashBoard, board_id) {
+module.exports = function(dashBoard, board_id, spinner) {
 	if(runCount===0) {
 		fs.mkdir('./reports/' + date, 0744, function(err) { 
 		  if(err) {
