@@ -22,10 +22,7 @@ var Spinner = require('cli-spinner').Spinner,
 *	17). If user enters y, application will go to state 11 -- report will be generated in same folder as 15 with a different board_name
 */
 
-
-
-
-// Loading spinner
+// Loading spinners
 var createDashBoard_spinner = new Spinner('creating your dashboard.. %s');
 var generateReport_spinner = new Spinner('generating your report.. %s');
 createDashBoard_spinner.setSpinnerString('⣾⣽⣻⢿⡿⣟⣯⣷');
@@ -54,9 +51,10 @@ var display = function (dashBoard) {
 	});
 }
 
+// immidiately invoked initialize function
 var init = function () {
 	prompts.start().then(function (input) {
-		// creat new dashboard with user input
+		// create new dashboard with user input
 		var dashBoard = new Dashboard(input.username, input.tag);
 		// get all relevant boards, lists, and tasks
 		createDashBoard_spinner.start();

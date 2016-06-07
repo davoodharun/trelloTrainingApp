@@ -12,7 +12,6 @@ DashBoard.prototype.addBoardsForUser = function() {
 	return new Promise (function (fulfill, reject) {
 		trelloController.getBoardsForUser(this.username, this.tag).then(function(result) {
 			this.boards = result;
-
 			fulfill(this);
 		}.bind(this)).catch(function(error) {
 			console.log('error adding boards', error)

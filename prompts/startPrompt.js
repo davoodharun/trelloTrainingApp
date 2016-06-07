@@ -1,7 +1,8 @@
 var promptConstants = require('./promptConstants'),
 		colors = require('colors/safe'),
 		prompt = require('prompt');
-module.exports = function () {
+
+var start = function () {
 	return new Promise (function (fulfill, reject) {
 		console.log(promptConstants.welcome);
 		prompt.start();
@@ -17,10 +18,10 @@ module.exports = function () {
 			if(result.username && result.tag) {
 				fulfill({username: result.username, tag: result.tag})
 			} else {
-				reject(':( sorry try again --- you must enter a username and tag name');
+				console.log(':( sorry try again --- you must enter a username and tag name' + '\n');
 				start();
 			}
 		})
-		
 	});
 }
+module.exports = start;

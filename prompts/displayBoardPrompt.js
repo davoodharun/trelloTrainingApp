@@ -4,7 +4,6 @@ var promptConstants = require('./promptConstants'),
 // takes a dashBoard object and a board number (index of dashBoard.boards)
 module.exports = function(dashBoard, board_id) {
 	return new Promise (function (fulfill, reject) {
-		console.log('here', dashBoard, board_id)
 		// console board header
 		console.log(promptConstants.board_name(dashBoard, board_id));
 		// console color legend
