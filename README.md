@@ -2,7 +2,17 @@
 
 
 ## Challenge and Approach
-This application is meant to analyze a trello user's boards on their account. This application is still in development
+This application is a CLI tool that is meant to analyze a trello user's boards on their account.
+
+User inputs username and tag name.
+A list of boards with titles related to the tag name will be displayed to the user.
+A user chooses a board to view.
+Based on the users's choice, a report will be generated and saved to the users local machine.
+A user can go back and select other boards to generate reports for. 
+The report is a .csv file that contains all the tasks (or cards) of a given board with dates of completed checklist items.
+
+
+This application is still in development.
 
 ## Usage
 
