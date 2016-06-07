@@ -1,13 +1,6 @@
-var prompt = require('prompt'),
-		cliff = require('cliff'),
-		Spinner = require('cli-spinner').Spinner,
-		async = require('async'),
-		colors = require('colors/safe'),
+var Spinner = require('cli-spinner').Spinner,
 		Dashboard = require('./dashBoard'),
-		trelloController = require('./trelloController'),
-		writeFile = require('./writeFileController'),
-		promptConstants = require('./promptConstants'),
-		dashBoardController = require('./dashBoardController');
+		prompts = require('./prompts')
 
 /* ::: CONTROL LOGIC :::
 *	 1). Welcome displayed
@@ -29,226 +22,54 @@ var prompt = require('prompt'),
 *	17). If user enters y, application will go to state 11 -- report will be generated in same folder as 15 with a different board_name
 */
 
-/* ::: FUNCTION CALLS :::
-* start --> createDashBoard (username, tag)                | 
-*   			--> displayBoardList (dashBoard) <---------------| 
-*						--> getActionsForTasks (dashBoard, board_id)   |
-*							--> displayBoard (dashBoard, board_id) ------------ end ---> 
-* 						--> writeFile (dashBoard, board_id)    
-*
-*/
 
 
-/*----------  start script  ----------*/
+
 // Loading spinner
-var spinner = new Spinner('creating your dashboard.. %s');
-spinner.setSpinnerString('|/-\\');
-// welcome prompt
+var createDashBoard_spinner = new Spinner('creating your dashboard.. %s');
+var generateReport_spinner = new Spinner('generating your report.. %s');
+createDashBoard_spinner.setSpinnerString('⣾⣽⣻⢿⡿⣟⣯⣷');
+generateReport_spinner.setSpinnerString('⣾⣽⣻⢿⡿⣟⣯⣷');
 
-
-
-var start = function () {
-	return new Promise (function (fulfill, reject) {
-		console.log(promptConstants.welcome);
-		prompt.start();
-		// ask user for username and tag input
-		console.log(promptConstants.username_tag_prompt);
-		prompt.get(['username', 'tag'], function(err, result) {
-			
-			if(err) {
-				console.log(err);
-				reject(err);
-			} 
-			// start loading spinner
-			if(result.username && result.tag) {
-				fulfill({username: result.username, tag: result.tag})
-			} else {
-				reject(':( sorry try again --- you must enter a username and tag name');
-				start();
-			}
-		})
-		
-	});
-}
-// init 
-start().then(function (input) {
-	createDashBoard(input.username, input.tag).then(function (dashBoard) {
-		displayBoardList(dashBoard);
-	})
-}).catch(function(error) {
-	console.log(error)
-})
-
-/*=================================================
-=            dashBoard build functions            =
-=================================================*/
-
-/*----------  function that creates dashBoard and finds all boards (with tag), lists, and tasks  ----------*/
-
-var createDashBoard = function(username, tag) {
-	return new Promise (function (fulfill, reject) {
-		var dashBoard = new Dashboard(username, tag);
-		// trello api call
-		dashBoard.addBoardsForUser().then(function(dashBoard) {
-			dashBoard.addListsForBoards().then(function(dashBoard) {
-				dashBoard.addTasksForLists().then(function(dashBoard) {
-					// stop spinner 
-					spinner.stop(true);
-					fulfill(dashBoard);
-				});
-			});	
-		}).catch(function (error){
-			console.log('error creating Dashboard...', error);
-			reject(error);
-		});
-	});	
-}
-
-/*----------  function to get actions (dates of completed tasks) for a specific board from user input  ----------*/
-var getActionsForTasks = function (dashBoard, board_id) {
-	spinner = new Spinner('exporting your report.. %s');
-	spinner.start();
-	async.each(dashBoard.boards[board_id].lists, function (element, callback){
-		async.map(element.tasks, trelloController.getActionsForTask, function (error, result) {
-			if(error) {
-				return callback(error, null);
-			} else {
-				element.tasks = result;
-				// console.log(element.tasks)
-				return callback(null, element);
-			}
-		});
-	}, function (error) {
-		if(error) {
-			console.log(error);
-		} else {
-			spinner.stop(true);
-			displayBoard(dashBoard, board_id); // dashBoard is in its final state
-			writeFile(dashBoard, board_id);
-		}
-	});
-}
-
-/*=====  End of dashBoard build functions  ======*/
-
-
-/*=========================================
-=            Display Functions            =
-=========================================*/
-
-/*----------  prompt/input function for to get actions (dates for completed tasks) for each task (or card) ----------*/
-// dashBoard parameter is an object with dashBoard.boards
-var displayBoardList = function(dashBoard) {
-	if (!dashBoard.boards) {
-		console.log('boards not found. ');
-		process.exit(-1);
-	}
-	// display dashboard name
-	console.log(promptConstants.dashboard_header(dashBoard));
-	// display header for list of boards
-	console.log(promptConstants.boards_header);
-	// log each board in dashBoard.boards
-	dashBoard.boards.forEach(function (element, index) {
-		console.log(promptConstants.board_list(element, index));
-	});
-	// user input for board choice
-	console.log(promptConstants.board_choice)
-	prompt.get(['board_id'], function (err, result) {
-		if (err) {
-			console.log(error);
-		} else {
-			// get actions for each list in dashBoard[result.board_id] -- see dashboard builder sections
-			getActionsForTasks(dashBoard, result.board_id)
-		}
-	});
-}
-
-
-/*----------  prompt display function to display lists and tasks of a specific board  ----------*/
-
-// takes a dashBoard object and a board number (index of dashBoard.boards)
-var displayBoard = function(dashBoard, board_id) {
-	// console board header
-	console.log(promptConstants.board_name(dashBoard, board_id));
-	// console color legend
-	console.log(promptConstants.color_legend)
-	// for list in board
-	dashBoard.boards[board_id].lists.forEach(function (element, index){
-		// log list name
-		console.log(promptConstants.list_name(element, index))
-		// closure variables to track completed tasks and completion date
-		var completed = '';
-		var dateCompleted = '';
-		// for each task in lists
-		element.tasks.forEach(function(element){
-			// check if task is complete
-			if(element.badges.checkItemsChecked === 1) {
-				// if task in complete, assign completed to check
-				completed = '✔';
-				// find date of completiong for specific action
-				var action = element.actions.filter(function (element) {
-					return element.type = 'updateCheckItemStateOnCard';
-				});
-				// set dateCompleted closure variable
-				dateCompleted = new Date(action[0].date).toLocaleString() // TODO: fix for IE8
-			} else {
-				// if task is not complete, set complete to x
-				completed = '✖';
-				// no completion date
-				dateCompleted = '';
-			}
-
-			// map label name to each item in element.labels
-			element.labels = element.labels.map(function (element){
-				return element.name;
+// function to display list of boards
+var display = function (dashBoard) {
+	// stop spinner
+	createDashBoard_spinner.stop(true);
+	// display board list to user
+	prompts.displayBoardList(dashBoard).then(function (result) {
+		// after user input, start spinner
+		generateReport_spinner.start();
+		// get all actions for tasks (or cards) based off of user input (board chioce)
+		result.dashBoard.getActionsForTasks(result.choice).then(function(result){
+			// stop spinner
+			generateReport_spinner.stop(true);
+			// display board to user 
+			prompts.displayBoard(result.dashBoard, result.board_index).then(function(result) {
+				// if user wants to view board list again and export another report
+				if(result.continue) {
+					display(result.dashBoard);
+				}
 			});
-
-			// check if task is required (has required label)
-			if(element.labels.indexOf('Required') >= 0) {
-				// remove 'required' label from array
-				element.labels.splice(element.labels.indexOf('Required'), 1)
-				// log task with green color
-				console.log(promptConstants.task_required(element, completed, dateCompleted));
-			} 
-			// check if task is optional or recommended
-			else if (element.labels.indexOf('Recommended') >=0) {
-				// remove 'recommended' label from array
-				element.labels.splice(element.labels.indexOf('Recommended'), 1)
-				// log task with yellow color
-				console.log(promptConstants.task_recommended(element, completed, dateCompleted));
-			} else {
-				// if unassigned (neither required or recommended), log task with magenta color
-				console.log(promptConstants.task_unassigned(element, completed, dateCompleted));
-			}
 		});
-		console.log('\n');
 	});
-
-	console.log('exported .csv file to reports folder');
-	console.log(colors.cyan('press y to go back to board list...'));
-
-	// recursive input to continue or exit
-	prompt.get(['continue'], function (err, result) {
-		if(err) {
-			console.log(err);
-		} else {
-			if(result.continue === 'y') {
-				displayBoardList(dashBoard);
-			} else {
-				process.exit(-1);
-			}
-		}
-	})
-};
-/*=====  End of Display Functions  ======*/
-
-module.exports = {
-	start: start,
-	getActionsForTasks: getActionsForTasks,
-	displayBoard: displayBoard,
-	displayBoardList: displayBoardList,
-	createDashBoard: createDashBoard
 }
+
+var init = function () {
+	prompts.start().then(function (input) {
+		// creat new dashboard with user input
+		var dashBoard = new Dashboard(input.username, input.tag);
+		// get all relevant boards, lists, and tasks
+		createDashBoard_spinner.start();
+		dashBoard.seedDashBoard().then(function (dashBoard) {
+			// display list of boards -- prompts user for board choice
+			display(dashBoard);
+		})
+	}).catch(function(error) {
+		console.log(error)
+	});
+}();
+
+
 
 
 

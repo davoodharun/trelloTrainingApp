@@ -5,7 +5,7 @@ module.exports = {
 	username_tag_prompt: colors.cyan('enter your trello username then enter search tag'),
 	boards_header: colors.cyan('Your boards:'), 
 	dashboard_header: function (dashBoard) {
-		return '\n' + colors.white('username: ') + colors.red(dashBoard.name) + ' ' + colors.white('tag name: ') + colors.red(dashBoard.tag);
+		return '\n' + colors.white('username: ') + colors.red(dashBoard.username) + ' ' + colors.white('tag name: ') + colors.red(dashBoard.tag);
 	},
 	board_choice: '\n'+ colors.cyan('enter the number of the board you want to view:'),
 	board_list: function(board, index) {

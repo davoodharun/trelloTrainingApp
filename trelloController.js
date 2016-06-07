@@ -5,7 +5,6 @@ var apiKey = require('./API_KEY'),
 module.exports = {
 
 	getBoardsForUser: function (username, tag) {
-
 		tag = tag || '';
 		return new Promise(function (fulfill, reject) {
 			trello.get('/1/members/' + username + '?boards=all&board_fields=name', function(err, data) {
