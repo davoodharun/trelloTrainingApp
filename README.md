@@ -4,15 +4,13 @@
 ## Challenge and Approach
 This application is a CLI tool that is meant to analyze a trello user's boards on their account.
 
-User inputs username and tag name.
-A list of boards with titles related to the tag name will be displayed to the user.
-A user chooses a board to view.
-Based on the users's choice, a report will be generated and saved to the users local machine.
-A user can go back and select other boards to generate reports for. 
-The report is a .csv file that contains all the tasks (or cards) of a given board with dates of completed checklist items.
+This application's main use is to provide a cli tool to analyze a trello users's boards that are designed in a spefic manner focused around a training or development program. The format of a board should be as follows:
 
-
-This application is still in development.
+	1. All boards should be titled with an identifiable tag name; this is how the applicaiton filters a user's boards
+	2. Each list should represent a type of certificate or training topic.
+	3. Each card should represent an individual task related to its respective list.
+	4. Each card should have ONE checkList item to indicate whether the task is completed or not.
+	5. Cards can be labeled with 'Required' or 'Recommended' to indicate required or optional tasks.
 
 ## Usage
 
