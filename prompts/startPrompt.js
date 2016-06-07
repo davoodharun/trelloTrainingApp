@@ -1,7 +1,8 @@
 var promptConstants = require('./promptConstants'),
 		colors = require('colors/safe'),
 		prompt = require('prompt');
-
+		
+// start function -- prompts user for username and tag name
 var start = function () {
 	return new Promise (function (fulfill, reject) {
 		console.log(promptConstants.welcome);

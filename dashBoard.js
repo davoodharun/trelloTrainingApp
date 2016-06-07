@@ -8,6 +8,7 @@ var DashBoard = function(name, tag) {
 	this.boards = []
 }
 
+// PROMISE: adds all boards do Dashboard.boards
 DashBoard.prototype.addBoardsForUser = function() {
 	return new Promise (function (fulfill, reject) {
 		trelloController.getBoardsForUser(this.username, this.tag).then(function(result) {
@@ -20,6 +21,7 @@ DashBoard.prototype.addBoardsForUser = function() {
 	}.bind(this))
 };
 
+// PROMISE: returns dashBoard with all lists added to all of dashBoard.boards.
 DashBoard.prototype.addListsForBoards = function() {
 	return new Promise (function (fulfill, reject) {
 		async.map(this.boards, trelloController.getListsForBoard, function(error, result) {
@@ -33,6 +35,7 @@ DashBoard.prototype.addListsForBoards = function() {
 	}.bind(this));
 };
 
+// PROMISE: returns dashBoard with all tasks added to the lists of for all boards.
 DashBoard.prototype.addTasksForLists = function() {
 	return new Promise (function (fulfill, reject) {
 		async.each(this.boards, function(element, callback){
@@ -57,6 +60,7 @@ DashBoard.prototype.addTasksForLists = function() {
 	}.bind(this))
 };
 
+// PROMISE: returns dashBoard with all actions (completed events) for all tasks for a specific board on dashBoard.boards.
 DashBoard.prototype.getActionsForTasks = function(board_index) {
 	return new Promise (function (fulfill, reject) {
 		async.each(this.boards[board_index].lists, function (element, callback){
@@ -80,6 +84,7 @@ DashBoard.prototype.getActionsForTasks = function(board_index) {
 	}.bind(this))
 };
 
+// PROMISE: returns dashBoard with all boards, lists, and tasks (cards) for a specific user.
 DashBoard.prototype.seedDashBoard = function () {
 	return new Promise (function (fulfill, reject) {
 		// trello api call

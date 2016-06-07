@@ -1,6 +1,7 @@
 var promptConstants = require('./promptConstants'),
 		prompt = require('prompt'),
 		colors = require('colors/safe');
+		
 // takes a dashBoard object and a board number (index of dashBoard.boards)
 module.exports = function(dashBoard, board_id) {
 	return new Promise (function (fulfill, reject) {
