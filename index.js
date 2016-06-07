@@ -6,7 +6,8 @@ var prompt = require('prompt'),
 		Dashboard = require('./dashBoard'),
 		trelloController = require('./trelloController'),
 		writeFile = require('./writeFileController'),
-		promptConstants = require('./promptConstants');
+		promptConstants = require('./promptConstants'),
+		dashBoardController = require('./dashBoardController');
 
 /* ::: CONTROL LOGIC :::
 *	 1). Welcome displayed
@@ -47,27 +48,36 @@ spinner.setSpinnerString('|/-\\');
 
 
 var start = function () {
-	console.log(promptConstants.welcome);
-	prompt.start();
-	// ask user for username and tag input
-	console.log(promptConstants.username_tag_prompt);
-	prompt.get(['username', 'tag'], function(err, result) {
-		if(err) {
-			console.log(err);
-			return;
-		} 
-		// start loading spinner
-		if(result.username && result.tag) {
-			spinner.start();
-			createDashBoard(result.username, result.tag);
-		} else {
-			console.log(':( sorry try again --- you must enter a username and tag name');
-			start();
-		}
+	return new Promise (function (fulfill, reject) {
+		console.log(promptConstants.welcome);
+		prompt.start();
+		// ask user for username and tag input
+		console.log(promptConstants.username_tag_prompt);
+		prompt.get(['username', 'tag'], function(err, result) {
+			
+			if(err) {
+				console.log(err);
+				reject(err);
+			} 
+			// start loading spinner
+			if(result.username && result.tag) {
+				fulfill({username: result.username, tag: result.tag})
+			} else {
+				reject(':( sorry try again --- you must enter a username and tag name');
+				start();
+			}
+		})
+		
 	});
 }
 // init 
-start();
+start().then(function (input) {
+	createDashBoard(input.username, input.tag).then(function (dashBoard) {
+		displayBoardList(dashBoard);
+	})
+}).catch(function(error) {
+	console.log(error)
+})
 
 /*=================================================
 =            dashBoard build functions            =
@@ -76,52 +86,22 @@ start();
 /*----------  function that creates dashBoard and finds all boards (with tag), lists, and tasks  ----------*/
 
 var createDashBoard = function(username, tag) {
-
-	return new Promise (function (fulfill, reject) {})
-	// create new Dashboard with input username and input tag name
-	var dashBoard = new Dashboard(username, tag);
-	// trello api call
-	trelloController.getBoardsForUser(username, tag).then(function(result) {
-		// set boards property on dashBoard to be equal to the result of api call (array of boards)
-		dashBoard.boards = result;
-		// get lists for each board in dashBoard.boards
-		async.map(dashBoard.boards, trelloController.getListsForBoard, function(error, result) {
-			if(error) {
-				console.log(error);
-				return;
-			}
-			// result is a newly mapped array of boards that each have .lists as an array of lists
-			dashBoard.boards = result;
-			// iterate over each board
-			async.each(dashBoard.boards, function(element, callback){
-				// get tasks (or cards) for each list in dashBoard.board[element];
-				async.map(element.lists, trelloController.getTasksForList, function(error, result) {
-					if(error) {
-						return callback(error, null);
-					} else {
-						// set boards.list equal to array of tasks
-						element.lists = result;
-						return callback(null, element);
-					}
+	return new Promise (function (fulfill, reject) {
+		var dashBoard = new Dashboard(username, tag);
+		// trello api call
+		dashBoard.addBoardsForUser().then(function(dashBoard) {
+			dashBoard.addListsForBoards().then(function(dashBoard) {
+				dashBoard.addTasksForLists().then(function(dashBoard) {
+					// stop spinner 
+					spinner.stop(true);
+					fulfill(dashBoard);
 				});
-				// error handler for async.each()
-			}, function (error) {
-				if(error) {
-					console.log(error)
-					return;
-				}
-				// stop spinner 
-				spinner.stop(true);
-				// call displayBoardList with the current dashBoard -- see display funtions section
-				displayBoardList(dashBoard); // dashBoard WITHOUT actions for each task
-			});
+			});	
+		}).catch(function (error){
+			console.log('error creating Dashboard...', error);
+			reject(error);
 		});
-	}).catch(function(error) {
-		console.log(error);
-		spinner.stop(true);
-		console.log('error occured. please check your api key and token and try again')
-		process.env.exit(-1);
-	});
+	});	
 }
 
 /*----------  function to get actions (dates of completed tasks) for a specific board from user input  ----------*/
